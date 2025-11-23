@@ -2,8 +2,6 @@
 
 Dashboard analitik data komprehensif yang menampilkan insight real-time dari pasar keuangan Indonesia, sektor perbankan, dan lanskap deteksi fraud menggunakan data autentik dari lembaga regulator dan firma riset pasar.
 
-![Dashboard Preview](screenshots/finsight-preview.png)
-
 ## Live Demo
 
 **[Lihat Dashboard](https://yourusername.github.io/finsight-dashboard/)**
