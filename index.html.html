@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSight - Indonesian Financial Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Animated Background Blobs */
+        .background-blobs {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .blob {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: blob 7s infinite;
+        }
+
+        .blob-1 {
+            top: 0;
+            left: 25%;
+            background: #3b82f6;
+            animation-delay: 0s;
+        }
+
+        .blob-2 {
+            top: 0;
+            right: 25%;
+            background: #8b5cf6;
+            animation-delay: 2s;
+        }
+
+        .blob-3 {
+            bottom: 0;
+            left: 33%;
+            background: #10b981;
+            animation-delay: 4s;
+        }
+
+        @keyframes blob {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .slide-up {
+            animation: slideUp 0.6s ease-out forwards;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 64px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .header h1 {
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(to right, #10b981, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .header .subtitle {
+            font-size: 1.5rem;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        .header .source {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5));
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            transition: all 0.3s ease;
+            animation: slideUp 0.6s ease-out forwards;
+        }
+
+        .stat-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(3) { animation-delay: 0.2s; }
+        .stat-card:nth-child(4) { animation-delay: 0.3s; }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+            color: #10b981;
+        }
+
+        .stat-source {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+        }
+
+        .stat-change.positive { color: #10b981; }
+        .stat-change.negative { color: #ef4444; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 48px;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .tab svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tab.active {
+            background: linear-gradient(to right, #10b981, #3b82f6);
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.5);
+            transform: scale(1.05);
+        }
+
+        .tab.inactive {
+            background: rgba(30, 41, 59, 0.5);
+            color: #9ca3af;
+        }
+
+        .tab.inactive:hover {
+            background: rgba(51, 65, 85, 0.5);
+            color: white;
+        }
+
+        /* Content Area */
+        .content-wrapper {
+            background: rgba(30, 41, 59, 0.3);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .content-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .content-title.emerald { color: #10b981; }
+        .content-title.blue { color: #3b82f6; }
+        .content-title.red { color: #ef4444; }
+        .content-title.purple { color: #a855f7; }
+
+        .content-description {
+            color: #94a3b8;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        .chart-note {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 16px;
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        /* Info Cards */
+        .info-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(20, 184, 166, 0.1));
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .info-card.blue {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1));
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .info-card.red {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(251, 146, 60, 0.1));
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .info-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .info-card.emerald h3 { color: #10b981; }
+        .info-card.blue h3 { color: #3b82f6; }
+        .info-card.red h3 { color: #ef4444; }
+
+        .info-card ul {
+            list-style: none;
+        }
+
+        .info-card li {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 12px;
+            color: #d1d5db;
+            line-height: 1.5;
+        }
+
+        .info-card li span:first-child {
+            margin-top: 4px;
+        }
+
+        /* Bank Cards */
+        .bank-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.7));
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .bank-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .bank-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 8px;
+        }
+
+        .bank-code {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        .bank-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .metric-value {
+            font-weight: 600;
+        }
+
+        .metric-value.large {
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .metric-value.emerald { color: #10b981; }
+        .metric-value.yellow { color: #fbbf24; }
+        .metric-value.purple { color: #a855f7; }
+
+        /* Alert Box */
+        .alert-box {
+            background: linear-gradient(to right, rgba(127, 29, 29, 0.2), rgba(194, 65, 12, 0.2));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .alert-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ef4444;
+            margin-bottom: 16px;
+        }
+
+        .alert-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .alert-stat-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .alert-stat-label {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .alert-stat-change {
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        /* Use Case Card */
+        .use-case-card {
+            background: linear-gradient(to right, rgba(16, 185, 129, 0.1), rgba(20, 184, 166, 0.1));
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .use-case-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(71, 85, 105, 0.8);
+        }
+
+        .use-case-card:nth-child(2) {
+            background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1));
+        }
+
+        .use-case-card:nth-child(3) {
+            background: linear-gradient(to right, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1));
+        }
+
+        .use-case-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 12px;
+        }
+
+        .use-case-description {
+            color: #d1d5db;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .use-case-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .use-case-section h4 {
+            font-weight: 600;
+            color: white;
+            font-size: 0.875rem;
+            margin-bottom: 12px;
+        }
+
+        .use-case-section ul {
+            list-style: none;
+        }
+
+        .use-case-section li {
+            font-size: 0.875rem;
+            color: #d1d5db;
+            margin-bottom: 4px;
+        }
+
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tech-tag {
+            padding: 6px 12px;
+            background: rgba(15, 23, 42, 0.5);
+            font-size: 0.75rem;
+            border-radius: 999px;
+            color: #d1d5db;
+            border: 1px solid #334155;
+        }
+
+        /* Tools Section */
+        .tools-section {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2));
+            padding: 32px;
+            border-radius: 16px;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .tools-section h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #a855f7;
+            margin-bottom: 24px;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .tools-column h4 {
+            font-weight: 600;
+            color: white;
+            font-size: 0.875rem;
+            margin-bottom: 12px;
+        }
+
+        .tools-column ul {
+            list-style: none;
+        }
+
+        .tools-column li {
+            font-size: 0.875rem;
+            color: #d1d5db;
+            margin-bottom: 8px;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 48px;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .footer p {
+            margin-bottom: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .header .subtitle {
+                font-size: 1.125rem;
+            }
+
+            .content-wrapper {
+                padding: 20px;
+            }
+
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Animated Background -->
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>FinSight</h1>
+            <p class="subtitle">Real Data dari Pasar Keuangan Indonesia 2024</p>
+            <p class="source">Sumber: OJK, IDX, Bank Indonesia, Ken Research, FICO</p>
+        </div>
+
+        <!-- Real-time Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                    </svg>
+                    <span class="stat-source">OJK Sep 2024</span>
+                </div>
+                <div class="stat-label">Total Aset Perbankan</div>
+                <div class="stat-value">Rp 12.147 T</div>
+                <div class="stat-change positive">+8.12% YoY</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                    <span class="stat-source">Ken Research</span>
+                </div>
+                <div class="stat-label">AI Fraud Detection Market</div>
+                <div class="stat-value">$1.1 Miliar</div>
+                <div class="stat-change positive">Base 2024</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <span class="stat-source">Govt Indonesia 2024</span>
+                </div>
+                <div class="stat-label">Kerugian Cybercrime</div>
+                <div class="stat-value">Rp 1.7 T</div>
+                <div class="stat-change negative">+30% YoY</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                    <span class="stat-source">IDX Real-time</span>
+                </div>
+                <div class="stat-label">IHSG Current</div>
+                <div class="stat-value">8,414.35</div>
+                <div class="stat-change positive">Nov 22, 2024</div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('market')" id="tab-market">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+                Market Data
+            </button>
+            <button class="tab inactive" onclick="showTab('banks')" id="tab-banks">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Banking Analysis
+            </button>
+            <button class="tab inactive" onclick="showTab('fraud')" id="tab-fraud">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                Fraud Detection
+            </button>
+            <button class="tab inactive" onclick="showTab('cases')" id="tab-cases">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+                Use Cases
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-wrapper">
+            
+            <!-- Market Data Tab -->
+            <div id="content-market" class="tab-content active">
+                <h2 class="content-title emerald">Indeks Harga Saham Gabungan (IHSG) 2024</h2>
+                <p class="content-description">
+                    Data real pergerakan IHSG sepanjang 2024. IHSG naik signifikan dari 7,139 di awal tahun ke 8,414 per November 2024, 
+                    didorong oleh rate cut Bank Indonesia dan Federal Reserve di September 2024.
+                </p>
+
+                <div class="chart-container">
+                    <canvas id="ihsgChart"></canvas>
+                </div>
+
+                <div class="grid-2">
+                    <div class="info-card emerald">
+                        <h3>Key Insights</h3>
+                        <ul>
+                            <li>
+                                <span>•</span>
+                                <span>IHSG mencapai 52-week high di 8,491 sebelum koreksi minor</span>
+                            </li>
+                            <li>
+                                <span>•</span>
+                                <span>Pertumbuhan +17.9% YTD (Year-to-Date)</span>
+                            </li>
+                            <li>
+                                <span>•</span>
+                                <span>Rate cut BI 25 bps menjadi 6% (Sep 2024) mendorong rally</span>
+                            </li>
+                            <li>
+                                <span>•</span>
+                                <span>820 perusahaan terdaftar di BEI, 530 di Sharia Index (ISSI)</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card blue">
+                        <h3>Projected Returns</h3>
+                        <ul>
+                            <li>
+                                <span>•</span>
+                                <span>Expected annual return: 5.6% (Buffett Indicator)</span>
+                            </li>
+                            <li>
+                                <span>•</span>
+                                <span>Economic growth contribution: 5.26%</span>
+                            </li>
+                            <li>
+                                <span>•</span>
+                                <span>Dividend Yield: 2.84%</span>
+                            </li>
+                            <li>
+                                <span>•</span>
+                                <span>Market cap/GDP ratio: 61.16% (mendekati 10-year high)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banks Tab -->
+            <div id="content-banks" class="tab-content">
+                <h2 class="content-title blue">Analisis Bank-Bank Terbesar Indonesia Q3 2024</h2>
+                <p class="content-description">
+                    Data real dari 6 bank terbesar di Indonesia. Big 4 (Mandiri, BRI, BCA, BNI) menguasai 49.73% total aset perbankan nasional.
+                </p>
+
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Total Aset (Triliun Rp)</h3>
+                        <canvas id="bankAssetsChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3 class="chart-title">Return on Equity (ROE %)</h3>
+                        <canvas id="bankROEChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid-3">
+                    <div class="bank-card">
+                        <h3>Bank Mandiri</h3>
+                        <p class="bank-code">BMRI</p>
+                        <div class="bank-metrics">
+                            <div>
+                                <p class="metric-label">Total Aset</p>
+                                <p class="metric-value large">Rp 2,324 T</p>
+                            </div>
+                            <div>
+                                <p class="metric-label">Kredit</p>
+                                <p class="metric-value emerald">Rp 1,345 T</p>
+                            </div>
+                            <div class="metric-row">
+                                <div>
+                                    <p class="metric-label">NPL</p>
+                                    <p class="metric-value yellow">2.1%</p>
+                                </div>
+                                <div>
+                                    <p class="metric-label">ROE</p>
+                                    <p class="metric-value purple">18.5%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bank-card">
+                        <h3>BRI</h3>
+                        <p class="bank-code">BBRI</p>
+                        <div class="bank-metrics">
+                            <div>
+                                <p class="metric-label">Total Aset</p>
+                                <p class="metric-value large">Rp 1,962 T</p>
+                            </div>
+                            <div>
+                                <p class="metric-label">Kredit</p>
+                                <p class="metric-value emerald">Rp 1,353 T</p>
+                            </div>
+                            <div class="metric-row">
+                                <div>
+                                    <p class="metric-label">NPL</p>
+                                    <p class="metric-value yellow">2.3%</p>
+                                </div>
+                                <div>
+                                    <p class="metric-label">ROE</p>
+                                    <p class="metric-value purple">19.2%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bank-card">
+                        <h3>BCA</h3>
+                        <p class="bank-code">BBCA</p>
+                        <div class="bank-metrics">
+                            <div>
+                                <p class="metric-label">Total Aset</p>
+                                <p class="metric-value large">Rp 1,434 T</p>
+                            </div>
+                            <div>
+                                <p class="metric-label">Kredit</p>
+                                <p class="metric-value emerald">Rp 836 T</p>
+                            </div>
+                            <div class="metric-row">
+                                <div>
+                                    <p class="metric-label">NPL</p>
+                                    <p class="metric-value yellow">0.9%</p>
+                                </div>
+                                <div>
+                                    <p class="metric-label">ROE</p>
+                                    <p class="metric-value purple">20.8%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fraud Tab -->
+            <div id="content-fraud" class="tab-content">
+                <h2 class="content-title red">AI-Powered Fraud Detection di Indonesia</h2>
+                <p class="content-description">
+                    Data real dari implementasi fraud detection di Indonesia. Bank Mandiri berhasil mengurangi fraud losses 85% menggunakan AI dan machine learning.
+                </p>
+
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Bank Mandiri: Fraud Reduction Journey</h3>
+                        <canvas id="fraudChart"></canvas>
+                        <p class="chart-note">
+                            *Fraud losses turun 85% dari Q1 2022 ke Q3 2023 setelah implementasi FICO Falcon
+                        </p>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3 class="chart-title">Jenis Fraud di Indonesia 2024</h3>
+                        <canvas id="fraudTypesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="alert-box">
+                    <div class="alert-header">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        Critical Stats - Indonesia Fraud Landscape 2024
+                    </div>
+                    <div class="alert-stats">
+                        <div>
+                            <div class="alert-stat-value">Rp 1.7 T</div>
+                            <div class="alert-stat-label">Kerugian cybercrime tahunan</div>
+                            <div class="alert-stat-change negative">+30% YoY</div>
+                        </div>
+                        <div>
+                            <div class="alert-stat-value">$1.1 B</div>
+                            <div class="alert-stat-label">AI Fraud Detection Market</div>
+                            <div class="alert-stat-change positive">Base year 2024</div>
+                        </div>
+                        <div>
+                            <div class="alert-stat-value">$88.9 M</div>
+                            <div class="alert-stat-label">Budget fraud prevention 2024</div>
+                            <div class="alert-stat-change positive">Ranking #3 di APAC</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card emerald">
+                    <h3>Success Story: Bank Mandiri + FICO</h3>
+                    <div class="grid-2">
+                        <div>
+                            <h4>Hasil Implementasi</h4>
+                            <ul>
+                                <li><span>✓</span> <span>85% pengurangan fraud di Livin app (Jan-Aug 2023)</span></li>
+                                <li><span>✓</span> <span>77% pengurangan fraud di kartu kredit/debit (2022)</span></li>
+                                <li><span>✓</span> <span>1.64 miliar transaksi diamankan ($156B value)</span></li>
+                                <li><span>✓</span> <span>Detection rate meningkat hingga 92%</span></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Teknologi yang Digunakan</h4>
+                            <ul>
+                                <li><span>•</span> <span>FICO Falcon Fraud Manager</span></li>
+                                <li><span>•</span> <span>Machine Learning Models</span></li>
+                                <li><span>•</span> <span>Real-time Transaction Monitoring</span></li>
+                                <li><span>•</span> <span>Scam Detection dengan APP fraud prevention</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Use Cases Tab -->
+            <div id="content-cases" class="tab-content">
+                <h2 class="content-title purple">Real-World Use Cases: Data Science in Indonesian Finance</h2>
+                <p class="content-description">
+                    Studi kasus nyata penerapan data science dan analytics di sektor keuangan Indonesia dengan data dan hasil terukur.
+                </p>
+
+                <div class="use-case-card">
+                    <h3 class="use-case-title">Fraud Detection - Bank Mandiri</h3>
+                    <p class="use-case-description">Bank Mandiri berhasil mengurangi fraud losses sebesar 85% (Jan-Aug 2023) menggunakan FICO Falcon Fraud Manager dengan machine learning.</p>
+                    <div class="use-case-content">
+                        <div class="use-case-section">
+                            <h4>Key Metrics:</h4>
+                            <ul>
+                                <li>→ 85% pengurangan fraud losses pada Livin app</li>
+                                <li>→ 77% pengurangan fraud di kartu kredit/debit</li>
+                                <li>→ 1.64 miliar transaksi diamankan (2022)</li>
+                                <li>→ Nilai transaksi: $156 miliar</li>
+                            </ul>
+                        </div>
+                        <div class="use-case-section">
+                            <h4>Technologies:</h4>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Machine Learning</span>
+                                <span class="tech-tag">Real-time Detection</span>
+                                <span class="tech-tag">Pattern Recognition</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="use-case-card">
+                    <h3 class="use-case-title">Portfolio Analysis - Big 4 Banks</h3>
+                    <p class="use-case-description">Bank Mandiri, BRI, BCA, dan BNI menguasai 49.73% total aset perbankan Indonesia (Rp 6,040 T dari Rp 12,147 T).</p>
+                    <div class="use-case-content">
+                        <div class="use-case-section">
+                            <h4>Key Metrics:</h4>
+                            <ul>
+                                <li>→ Bank Mandiri: Rp 2,324 T (ROE 18.5%)</li>
+                                <li>→ BRI: Rp 1,962 T (ROE 19.2%)</li>
+                                <li>→ BCA: Rp 1,434 T (ROE 20.8%)</li>
+                                <li>→ BNI: Rp 1,320 T (ROE 16.4%)</li>
+                            </ul>
+                        </div>
+                        <div class="use-case-section">
+                            <h4>Technologies:</h4>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Risk Analysis</span>
+                                <span class="tech-tag">Portfolio Optimization</span>
+                                <span class="tech-tag">Performance Metrics</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="use-case-card">
+                    <h3 class="use-case-title">Market Prediction - IHSG</h3>
+                    <p class="use-case-description">IHSG naik dari 7,139 (Jan 2024) ke 8,414 (Nov 2024), didorong oleh rate cut BI dan Federal Reserve serta sentimen positif pasar.</p>
+                    <div class="use-case-content">
+                        <div class="use-case-section">
+                            <h4>Key Metrics:</h4>
+                            <ul>
+                                <li>→ Pertumbuhan +17.9% YTD</li>
+                                <li>→ Peak: 8,491 (52-week high)</li>
+                                <li>→ Projected return: 5.6% annually</li>
+                                <li>→ Market cap/GDP: 61.16%</li>
+                            </ul>
+                        </div>
+                        <div class="use-case-section">
+                            <h4>Technologies:</h4>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Time Series Analysis</span>
+                                <span class="tech-tag">Economic Indicators</span>
+                                <span class="tech-tag">Sentiment Analysis</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tools-section">
+                    <h3>Tools & Technologies Ecosystem</h3>
+                    <div class="tools-grid">
+                        <div class="tools-column">
+                            <h4>Programming</h4>
+                            <ul>
+                                <li>• Python</li>
+                                <li>• R</li>
+                                <li>• SQL</li>
+                                <li>• Scala</li>
+                            </ul>
+                        </div>
+                        <div class="tools-column">
+                            <h4>ML/AI Frameworks</h4>
+                            <ul>
+                                <li>• TensorFlow</li>
+                                <li>• PyTorch</li>
+                                <li>• Scikit-learn</li>
+                                <li>• XGBoost</li>
+                            </ul>
+                        </div>
+                        <div class="tools-column">
+                            <h4>Big Data</h4>
+                            <ul>
+                                <li>• Apache Spark</li>
+                                <li>• Hadoop</li>
+                                <li>• Kafka</li>
+                                <li>• Flink</li>
+                            </ul>
+                        </div>
+                        <div class="tools-column">
+                            <h4>Visualization</h4>
+                            <ul>
+                                <li>• Tableau</li>
+                                <li>• Power BI</li>
+                                <li>• Matplotlib</li>
+                                <li>• Plotly</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                Data dikumpulkan dari: Otoritas Jasa Keuangan (OJK), Indonesia Stock Exchange (IDX), 
+                Bank Indonesia (BI), FICO, Ken Research, The Asian Banker
+            </p>
+            <p>
+                Dashboard ini menggunakan data real dari pasar keuangan Indonesia per Q3-Q4 2024
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+                tab.classList.add('inactive');
+            });
+            
+            // Show selected content
+            document.getElementById('content-' + tabName).classList.add('active');
+            
+            // Add active class to selected tab
+            document.getElementById('tab-' + tabName).classList.remove('inactive');
+            document.getElementById('tab-' + tabName).classList.add('active');
+        }
+
+        // Chart.js configurations
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#94a3b8',
+                        font: {
+                            family: 'Inter'
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: { 
+                        color: '#94a3b8',
+                        font: {
+                            family: 'Inter'
+                        }
+                    },
+                    grid: { color: '#334155' }
+                },
+                x: {
+                    ticks: { 
+                        color: '#94a3b8',
+                        font: {
+                            family: 'Inter'
+                        }
+                    },
+                    grid: { color: '#334155' }
+                }
+            }
+        };
+
+        // IHSG Chart
+        new Chart(document.getElementById('ihsgChart'), {
+            type: 'line',
+            data: {
+                labels: ['Jan 24', 'Feb 24', 'Mar 24', 'Apr 24', 'May 24', 'Jun 24', 'Jul 24', 'Aug 24', 'Sep 24', 'Oct 24', 'Nov 24'],
+                datasets: [{
+                    label: 'IHSG',
+                    data: [7139, 7245, 7189, 7298, 7456, 7512, 7634, 7752, 7905, 7823, 8414],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#10b981',
+                    borderWidth: 3
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Bank Assets Chart
+        new Chart(document.getElementById('bankAssetsChart'), {
+            type: 'bar',
+            data: {
+                labels: ['BMRI', 'BBRI', 'BBCA', 'BBNI', 'BRIS', 'BNGA'],
+                datasets: [{
+                    label: 'Total Aset (Triliun Rp)',
+                    data: [2324, 1962, 1434, 1320, 358, 333],
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 8
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Bank ROE Chart
+        new Chart(document.getElementById('bankROEChart'), {
+            type: 'bar',
+            data: {
+                labels: ['BMRI', 'BBRI', 'BBCA', 'BBNI', 'BRIS', 'BNGA'],
+                datasets: [{
+                    label: 'ROE (%)',
+                    data: [18.5, 19.2, 20.8, 16.4, 15.1, 12.3],
+                    backgroundColor: '#10b981',
+                    borderRadius: 8
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Fraud Reduction Chart
+        new Chart(document.getElementById('fraudChart'), {
+            type: 'line',
+            data: {
+                labels: ['Q1 2022', 'Q2 2022', 'Q3 2022', 'Q4 2022', 'Q1 2023', 'Q2 2023', 'Q3 2023'],
+                datasets: [
+                    {
+                        label: 'Fraud Losses (Index)',
+                        data: [100, 95, 88, 82, 65, 42, 15],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3
+                    },
+                    {
+                        label: 'Detection Rate (%)',
+                        data: [45, 52, 61, 68, 78, 85, 92],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+
+        // Fraud Types Chart
+        new Chart(document.getElementById('fraudTypesChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Money Mule', 'Synthetic ID', 'Stolen ID', 'Card Fraud', 'Account Takeover', 'Lainnya'],
+                datasets: [{
+                    data: [28, 22, 19, 15, 10, 6],
+                    backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#6366f1']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#94a3b8',
+                            font: {
+                                family: 'Inter'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
