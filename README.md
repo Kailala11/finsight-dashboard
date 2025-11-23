@@ -4,7 +4,7 @@ Dashboard analitik data komprehensif yang menampilkan insight real-time dari pas
 
 ## Live Demo
 
-**[Lihat Dashboard](https://yourusername.github.io/finsight-dashboard/)**
+**[Lihat Dashboard](https://Kailala11.github.io/finsight-dashboard/)**
 
 ## Gambaran Umum
 
